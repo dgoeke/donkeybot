@@ -1,0 +1,58 @@
+service:
+  name: donkeybot
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  secrets: ${file(secrets.yml):${self:custom.stage}, file(secrets.yml):default}
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-west-2
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    WEBPAGE_URI: ${self:custom.secrets.webpageURI}
+    SLACK_USERNAME: ${self:custom.secrets.slackUsername}
+    SLACK_AVATAR: ${self:custom.secrets.slackAvatar}
+    SLACK_CHANNEL: ${self:custom.secrets.slackChannel}
+    SLACK_URL: ${self:custom.secrets.slackURL}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  check:
+    handler: handler.check
+    events:
+      - schedule: rate(15 minutes)
+      - http:
+          method: get
+          path: check
+
+resources:
+  Resources:
+    TodosDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: uri
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uri
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
