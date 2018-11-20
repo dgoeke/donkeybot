@@ -58,10 +58,11 @@ const postToSlack = async (text, slackOptions) => {
   return request.post(slackOptions.webhookURL, {
     json: true,
     body: {
-      text: "@channel " + text,
+      text: "<!channel> " + text,
       channel: slackOptions.channel,
       username: slackOptions.username,
-      icon_url: slackOptions.avatar
+      icon_url: slackOptions.avatar,
+      link_names: true
     }
   });
 };
@@ -70,12 +71,11 @@ export const check: Handler = async (event: APIGatewayEvent, context: Context, c
   const liveText : string = await websiteText(webpageURI);
   const cachedHash : string = await dbHash(webpageURI);
   const liveHash = md5(liveText);
-  var updateSent = false;
+  const isDifferent = (liveHash != cachedHash);
 
-  if (liveHash != cachedHash) {
+  if (isDifferent) {
     await storeDbHash(webpageURI, liveHash);
     await postToSlack(liveText, slackOptions);
-    updateSent = true
   }
 
   const response = {
@@ -85,7 +85,7 @@ export const check: Handler = async (event: APIGatewayEvent, context: Context, c
       liveText: liveText,
       cachedHash: cachedHash,
       liveHash: liveHash,
-      updateSent: updateSent
+      isDifferent: isDifferent
     }),
   };
 
