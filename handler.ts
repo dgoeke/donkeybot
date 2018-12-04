@@ -19,7 +19,7 @@ const slackOptions = {
 
 const websiteText = async (uri : string) => {
   const result = await request.get({ uri: uri });
-  
+
   return html2text.fromString(result, {
     baseElement: ["div.thb-text"],
     ignoreHref: true,
@@ -62,7 +62,19 @@ const postToSlack = async (text, slackOptions) => {
       channel: slackOptions.channel,
       username: slackOptions.username,
       icon_url: slackOptions.avatar,
-      link_names: true
+      link_names: true,
+      attachments: [
+        {
+          fallback: "Roaring Donkey Trivia Night: http://www.roaring-donkey.com/trivia-night",
+          actions: [
+            {
+              type: "button",
+              text: "Trivia Night Website",
+              url: "http://www.roaring-donkey.com/trivia-night"
+            }
+          ]
+        }
+      ]
     }
   });
 };
