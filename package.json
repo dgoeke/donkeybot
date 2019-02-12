@@ -10,6 +10,7 @@
     "@types/jsdom": "^12.2.0",
     "@types/request-promise-native": "^1.0.15",
     "aws-sdk": "^2.354.0",
+    "he": "^1.2.0",
     "html-to-text": "^4.0.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5"

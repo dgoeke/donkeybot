@@ -3,6 +3,7 @@ import * as request from 'request-promise-native';
 import * as html2text from 'html-to-text';
 import { DynamoDB } from 'aws-sdk';
 import * as crypto from 'crypto';
+import * as he from 'he';
 
 const dynamoDb = new DynamoDB.DocumentClient();
 const md5 = (contents: string) => crypto.createHash('md5').update(contents).digest("hex");
@@ -23,7 +24,13 @@ const websiteText = async (uri : string) => {
   return html2text.fromString(result, {
     baseElement: ["div.thb-text"],
     ignoreHref: true,
-    ignoreImage: true
+    ignoreImage: true,
+    format: {
+      text: function (elem, _) {
+        var text = elem.data.trim();
+        return text == "" ? text : he.decode(text) + "\n";
+      }
+    }
   });
 };
 
